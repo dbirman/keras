@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import os
 from .common import _FLOATX, _EPSILON
 
 # INTERNAL UTILS
@@ -10,7 +11,11 @@ _SESSION = None
 def _get_session():
     global _SESSION
     if _SESSION is None:
-        _SESSION = tf.Session('')
+        if not os.environ.get('OMP_NUM_THREADS'):
+            _SESSION = tf.Session('')
+        else:
+            nb_thread = int(os.environ.get('OMP_NUM_THREADS'))
+            _SESSION = tf.Session(config=tf.ConfigProto(intra_op_parallelism_threads=nb_thread))
     return _SESSION
 
 
@@ -500,7 +505,9 @@ def switch(condition, then_expression, else_expression):
 def relu(x, alpha=0., max_value=None):
     '''ReLU.
 
-    alpha: slope of negative section.
+    # Arguments
+        alpha: slope of negative section.
+        max_value: saturation threshold.
     '''
     negative_part = tf.nn.relu(-x)
     x = tf.nn.relu(x)
@@ -584,11 +591,12 @@ def l2_normalize(x, axis):
 
 def conv2d(x, kernel, strides=(1, 1), border_mode='valid', dim_ordering='th',
            image_shape=None, filter_shape=None):
-    '''
-    Run on cuDNN if available.
-    border_mode: string, "same" or "valid".
-    dim_ordering: whether to use Theano or TensorFlow dimension ordering
-    in inputs/kernels/ouputs.
+    '''Runs on cuDNN if available.
+
+    # Arguments
+        border_mode: string, "same" or "valid".
+        dim_ordering: whether to use Theano or TensorFlow dimension ordering
+        in inputs/kernels/ouputs.
     '''
     if border_mode == 'same':
         padding = 'SAME'
@@ -628,10 +636,11 @@ def conv2d(x, kernel, strides=(1, 1), border_mode='valid', dim_ordering='th',
 def pool2d(x, pool_size, strides=(1, 1),
            border_mode='valid', dim_ordering='th', pool_mode='max'):
     '''
-    pool_size: tuple of 2 integers.
-    strides: tuple of 2 integers.
-    border_mode: one of "valid", "same".
-    dim_ordering: one of "th", "tf".
+    # Arguments
+        pool_size: tuple of 2 integers.
+        strides: tuple of 2 integers.
+        border_mode: one of "valid", "same".
+        dim_ordering: one of "th", "tf".
     '''
     if border_mode == 'same':
         padding = 'SAME'
