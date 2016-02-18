@@ -270,8 +270,8 @@ def resize_volumes(X, depth_factor, height_factor, width_factor, dim_ordering):
     '''Resize the volume contained in a 5D tensor of shape
     - [batch, channels, depth, height, width] (for 'th' dim_ordering)
     - [batch, depth, height, width, channels] (for 'tf' dim_ordering)
-    by a factor of (depth_factor, height_factor, width_factor). Both factors should be
-    positive integers.
+    by a factor of (depth_factor, height_factor, width_factor).
+    Both factors should be positive integers.
     '''
     if dim_ordering == 'th':
         output = repeat_elements(X, depth_factor, axis=2)
@@ -382,7 +382,8 @@ def spatial_2d_padding(x, padding=(1, 1), dim_ordering='th'):
 
 def spatial_3d_padding(x, padding=(1, 1, 1), dim_ordering='th'):
     '''Pad the 2nd, 3rd and 4th dimensions of a 5D tensor
-    with "padding[0]", "padding[1]" and "padding[1]" (resp.) zeros left and right.
+    with "padding[0]", "padding[1]" and "padding[2]" (resp.) zeros 
+    left and right.
     '''
     input_shape = x.shape
     if dim_ordering == 'th':
@@ -715,10 +716,10 @@ def conv3d(x, kernel, strides=(1, 1, 1), border_mode='valid', dim_ordering='th',
     if dim_ordering == 'tf':
         # TF uses the last dimension as channel dimension,
         # instead of the 2nd one.
-        # TH input shape: (samples, input_depth, time, rows, cols)
-        # TF input shape: (samples, time, rows, cols, input_depth)
-        # TH kernel shape: (out_depth, input_depth, time, rows, cols)
-        # TF kernel shape: (time, rows, cols, input_depth, out_depth)
+        # TH input shape: (samples, input_depth, conv_dim1, conv_dim2, conv_dim3)
+        # TF input shape: (samples, conv_dim1, conv_dim2, conv_dim3, input_depth)
+        # TH kernel shape: (out_depth, input_depth, len_conv_dim1, len_conv_dim2, len_conv_dim3)
+        # TF kernel shape: (len_conv_dim1, len_conv_dim2, len_conv_dim3, input_depth, out_depth)
         x = x.dimshuffle((0, 4, 1, 2, 3))
         kernel = kernel.dimshuffle((4, 3, 0, 1, 2))
         if image_shape:
@@ -730,18 +731,18 @@ def conv3d(x, kernel, strides=(1, 1, 1), border_mode='valid', dim_ordering='th',
 
     if border_mode == 'same':
         assert(strides == (1, 1, 1))
-        pad_t = (kernel.shape[2] - 1)
-        pad_x = (kernel.shape[3] - 1)
-        pad_y = (kernel.shape[4] - 1)
+        pad_dim1 = (kernel.shape[2] - 1)
+        pad_dim2 = (kernel.shape[3] - 1)
+        pad_dim3 = (kernel.shape[4] - 1)
         output_shape = (x.shape[0], x.shape[1],
-                        x.shape[2] + pad_t,
-                        x.shape[3] + pad_x,
-                        x.shape[4] + pad_y)
+                        x.shape[2] + pad_dim1,
+                        x.shape[3] + pad_dim2,
+                        x.shape[4] + pad_dim3)
         output = T.zeros(output_shape)
         indices = (slice(None), slice(None),
-                   slice(pad_t // 2, x.shape[2] + pad_t // 2),
-                   slice(pad_x // 2, x.shape[3] + pad_x // 2),
-                   slice(pad_y // 2, x.shape[4] + pad_y // 2))
+                   slice(pad_dim1 // 2, x.shape[2] + pad_dim1 // 2),
+                   slice(pad_dim2 // 2, x.shape[3] + pad_dim2 // 2),
+                   slice(pad_dim3 // 2, x.shape[4] + pad_dim3 // 2))
         x = T.set_subtensor(output[indices], x)
         border_mode = 'valid'
 
@@ -814,7 +815,7 @@ def pool3d(x, pool_size, strides=(1, 1, 1), border_mode='valid',
         x = x.dimshuffle((0, 4, 1, 2, 3))
 
     if pool_mode == 'max':
-        # pooling over X, Z (last two channels)
+        # pooling over conv_dim2, conv_dim1 (last two channels)
         output = downsample.max_pool_2d(input=x.dimshuffle(0, 1, 4, 3, 2),
                                         ds=(pool_size[1], pool_size[0]),
                                         st=(strides[1], strides[0]),
@@ -822,7 +823,7 @@ def pool3d(x, pool_size, strides=(1, 1, 1), border_mode='valid',
                                         padding=padding,
                                         mode='max')
 
-        # max_pool_2d X and Y, X constant
+        # pooling over conv_dim3
         pool_out = downsample.max_pool_2d(input=output.dimshuffle(0, 1, 4, 3, 2),
                                           ds=(1, pool_size[2]),
                                           st=(1, strides[2]),
@@ -831,7 +832,7 @@ def pool3d(x, pool_size, strides=(1, 1, 1), border_mode='valid',
                                           mode='max')
 
     elif pool_mode == 'avg':
-        # pooling over X, Z (last two channels)
+        # pooling over conv_dim2, conv_dim1 (last two channels)
         output = downsample.max_pool_2d(input=x.dimshuffle(0, 1, 4, 3, 2),
                                         ds=(pool_size[1], pool_size[0]),
                                         st=(strides[1], strides[0]),
@@ -839,7 +840,7 @@ def pool3d(x, pool_size, strides=(1, 1, 1), border_mode='valid',
                                         padding=padding,
                                         mode='average_exc_pad')
 
-        # max_pool_2d X and Y, X constant
+        # pooling over conv_dim3
         pool_out = downsample.max_pool_2d(input=output.dimshuffle(0, 1, 4, 3, 2),
                                           ds=(1, pool_size[2]),
                                           st=(1, strides[2]),

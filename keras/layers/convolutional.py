@@ -482,7 +482,7 @@ class Convolution3D(Layer):
 
         conv_dim1 = conv_output_length(conv_dim1, self.len_conv_dim1,
                                        self.border_mode, self.subsample[0])
-        conv_dim2 = conv_output_length(conv_dim2, self.len_conv_dim3,
+        conv_dim2 = conv_output_length(conv_dim2, self.len_conv_dim2,
                                        self.border_mode, self.subsample[1])
         conv_dim3 = conv_output_length(conv_dim3, self.len_conv_dim3,
                                        self.border_mode, self.subsample[2])
