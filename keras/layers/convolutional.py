@@ -865,7 +865,6 @@ class MaxPooling3D(_Pooling3D):
             (2, 2, 2) will halve the size of the 3D input in each dimension.
         strides: tuple of 3 integers, or None. Strides values.
         border_mode: 'valid' or 'same'.
-            Note: 'same' will only work with TensorFlow for the time being.
         dim_ordering: 'th' or 'tf'. In 'th' mode, the channels dimension
             (the depth) is at index 1, in 'tf' mode is it at index 4.
     '''
@@ -906,7 +905,6 @@ class AveragePooling3D(_Pooling3D):
             (2, 2, 2) will halve the size of the 3D input in each dimension.
         strides: tuple of 3 integers, or None. Strides values.
         border_mode: 'valid' or 'same'.
-            Note: 'same' will only work with TensorFlow for the time being.
         dim_ordering: 'th' or 'tf'. In 'th' mode, the channels dimension
             (the depth) is at index 1, in 'tf' mode is it at index 4.
     '''
