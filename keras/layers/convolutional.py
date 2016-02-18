@@ -354,9 +354,9 @@ class Convolution3D(Layer):
 
     # Input shape
         5D tensor with shape:
-        `(samples, channels, len_conv_dim1, len_conv_dim2, len_conv_dim3)` if dim_ordering='th'
+        `(samples, channels, len_input_dim1, len_input_dim2, len_input_dim3)` if dim_ordering='th'
         or 5D tensor with shape:
-        `(samples, len_conv_dim1, len_conv_dim2, len_conv_dim3, channels)` if dim_ordering='tf'.
+        `(samples, len_input_dim1, len_input_dim2, len_input_dim3, channels)` if dim_ordering='tf'.
     # Output shape
         5D tensor with shape:
         `(samples, nb_filter, len_new_dim1, len_new_dim2, len_new_dim3)` if dim_ordering='th'
